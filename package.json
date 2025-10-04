@@ -1,6 +1,6 @@
 {
   "name": "eslint-plugin-absolute-imports",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "main": "index.js",
   "dependencies": {
     "jsonc-parser": "^3.3.1"
