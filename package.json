@@ -2,7 +2,9 @@
   "name": "eslint-plugin-absolute-imports",
   "version": "0.0.4",
   "main": "index.js",
-  "dependencies": {},
+  "dependencies": {
+    "jsonc-parser": "^3.3.1"
+  },
   "description": "Eslint rule enforcing absolute imports",
   "license": "MIT",
   "author": {

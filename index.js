@@ -2,6 +2,20 @@
 
 const fs = require("fs");
 const path = require("path");
+let parseJsonc;
+
+try {
+  // Lazy load so requiring the plugin does not throw if dependency resolution is odd during installation.
+  ({ parse: parseJsonc } = require("jsonc-parser"));
+} catch (e) {
+  // Fallback: define a minimal comment stripper if dependency missing (should not happen after install)
+  parseJsonc = function (text) {
+    // Remove // and /* */ comments very naively as a last resort.
+    const withoutLine = text.replace(/(^|\s)\/\/.*$/gm, "");
+    const withoutBlock = withoutLine.replace(/\/\*[\s\S]*?\*\//g, "");
+    return JSON.parse(withoutBlock);
+  };
+}
 
 function has(map, path) {
   let inner = map;
@@ -30,20 +44,20 @@ function findDirWithFile(filename) {
 
 function getBaseUrl(baseDir) {
   let url = "";
-
-  if (fs.existsSync(path.join(baseDir, "tsconfig.json"))) {
-    const tsconfig = JSON.parse(
-      fs.readFileSync(path.join(baseDir, "tsconfig.json"))
-    );
-    if (has(tsconfig, "compilerOptions.baseUrl")) {
-      url = tsconfig.compilerOptions.baseUrl;
-    }
-  } else if (fs.existsSync(path.join(baseDir, "jsconfig.json"))) {
-    const jsconfig = JSON.parse(
-      fs.readFileSync(path.join(baseDir, "jsconfig.json"))
-    );
-    if (has(jsconfig, "compilerOptions.baseUrl")) {
-      url = jsconfig.compilerOptions.baseUrl;
+  const tryFiles = ["tsconfig.json", "jsconfig.json"];
+  for (const filename of tryFiles) {
+    const full = path.join(baseDir, filename);
+    if (!fs.existsSync(full)) continue;
+    try {
+      const raw = fs.readFileSync(full, "utf8");
+      const data = parseJsonc(raw);
+      if (data && has(data, "compilerOptions.baseUrl")) {
+        url = data.compilerOptions.baseUrl;
+        break;
+      }
+    } catch (e) {
+      // Swallow parse errors – rule will just not transform if baseUrl unknown.
+      continue;
     }
   }
 
@@ -65,7 +79,7 @@ module.exports.rules = {
       return {
         ImportDeclaration(node) {
           const source = node.source.value;
-          if (source.startsWith(".")) {
+          if (source.startsWith("..")) {
             const filename = context.getFilename();
             const absolutePath = path.normalize(
               path.join(path.dirname(filename), source)
