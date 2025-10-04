@@ -6,7 +6,6 @@ on:
 
 permissions:
   contents: write
-  packages: write
 
 jobs:
   release:
@@ -21,7 +20,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
         run: npm ci || npm install
@@ -65,10 +63,12 @@ jobs:
           git tag "v$NEW_VERSION"
           echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
-      - name: Publish to npm
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish --access public
+      - name: Create tarball (npm pack)
+        id: pack
+        run: |
+          PKG_FILE=$(npm pack --quiet)
+          echo "Package file: $PKG_FILE"
+          echo "file=$PKG_FILE" >> $GITHUB_OUTPUT
 
       - name: Push changes and tags
         run: |
@@ -81,5 +81,6 @@ jobs:
           name: v${{ steps.changelog.outputs.version }}
           body: |
             See CHANGELOG.md for details.
+          files: ${{ steps.pack.outputs.file }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
