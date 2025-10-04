@@ -58,17 +58,24 @@ module.exports.rules = {
     create: function (context) {
       const baseDir = findDirWithFile("package.json");
       const baseUrl = getBaseUrl(baseDir);
+      const options =
+        context.options && context.options[0] ? context.options[0] : {};
+      const prefix = typeof options.prefix === "string" ? options.prefix : "";
 
       return {
         ImportDeclaration(node) {
           const source = node.source.value;
           if (source.startsWith(".")) {
             const filename = context.getFilename();
-
             const absolutePath = path.normalize(
               path.join(path.dirname(filename), source)
             );
-            const expectedPath = path.relative(baseUrl, absolutePath);
+            let expectedPath = path.relative(baseUrl, absolutePath);
+            if (expectedPath === "") expectedPath = ".";
+            if (prefix) {
+              expectedPath =
+                prefix.replace(/\/$/, "") + expectedPath.replace(/^\.\/?/, "");
+            }
 
             if (source !== expectedPath) {
               context.report({

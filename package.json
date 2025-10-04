@@ -1,6 +1,6 @@
 {
   "name": "eslint-plugin-absolute-imports",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "main": "index.js",
   "dependencies": {},
   "description": "Eslint rule enforcing absolute imports",
@@ -14,7 +14,12 @@
     "Linters"
   ],
   "repository": {
-    "url": "https://www.github.com/jchen1/eslint-plugin-absolute-imports"
+    "url": "https://www.github.com/joetastic/eslint-plugin-absolute-imports"
+  },
+  "forkedFrom": {
+    "url": "https://github.com/jchen1/eslint-plugin-absolute-imports",
+    "originalAuthor": "Jeff Chen",
+    "note": "This is a fork. See original repository for upstream updates."
   },
   "keywords": [
     "eslint",
